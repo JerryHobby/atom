@@ -578,3 +578,55 @@ describe "TextEditorPresenter", ->
             advanceClock(cursorBlinkResumeDelay)
             advanceClock(cursorBlinkPeriod / 2)
           expect(presenter.state.content.blinkCursorsOff).toBe true
+
+      describe ".highlights", ->
+        stateForHighlight = (presenter, decoration) ->
+          presenter.state.content.highlights[decoration.id]
+
+        it "contains states for highlights that are visible on screen", ->
+          # off-screen above
+          marker1 = editor.markBufferRange([[0, 0], [1, 0]])
+          highlight1 = editor.decorateMarker(marker1, type: 'highlight', class: 'a')
+
+          # partially off-screen above, 1 of 2 regions on screen
+          marker2 = editor.markBufferRange([[1, 6], [2, 6]])
+          highlight2 = editor.decorateMarker(marker2, type: 'highlight', class: 'b')
+
+          # partially off-screen above, 2 of 3 regions on screen
+          marker3 = editor.markBufferRange([[0, 6], [3, 6]])
+          highlight3 = editor.decorateMarker(marker3, type: 'highlight', class: 'c')
+
+          # on-screen
+          marker4 = editor.markBufferRange([[2, 6], [4, 6]])
+          highlight4 = editor.decorateMarker(marker4, type: 'highlight', class: 'd')
+
+          # partially off-screen below, 2 of 3 regions on screen
+          marker5 = editor.markBufferRange([[3, 6], [5, 6]])
+          highlight5 = editor.decorateMarker(marker5, type: 'highlight', class: 'e')
+
+          # partially off-screen below, 1 of 3 regions on screen
+          marker6 = editor.markBufferRange([[4, 6], [6, 6]])
+          highlight6 = editor.decorateMarker(marker6, type: 'highlight', class: 'f')
+
+          # off-screen below
+          marker7 = editor.markBufferRange([[5, 6], [6, 6]])
+          highlight7 = editor.decorateMarker(marker7, type: 'highlight', class: 'g')
+
+          presenter = new TextEditorPresenter(model: editor, clientHeight: 30, scrollTop: 20, lineHeight: 10, lineOverdrawMargin: 0, baseCharacterWidth: 10)
+
+          # expect(stateForHighlight(presenter, highlight1)).toBeUndefined()
+          # expectValues stateForHighlight(presenter, highlight2), {
+          #   class: 'b'
+          #   regions: [
+          #     {top: 2 * 10, left: 0 * 10, width: 6 * 10, height: 1 * 10}
+          #   ]
+          # }
+
+          expectValues stateForHighlight(presenter, highlight4), {
+            class: 'd'
+            regions: [
+              {top: 2 * 10, left: 6 * 10, right: 0, height: 1 * 10}
+              {top: 3 * 10, left: 0, right: 0, height: 1 * 10}
+              {top: 4 * 10, left: 0, width: 6 * 10, height: 1 * 10}
+            ]
+          }
